@@ -3,8 +3,11 @@
 #include <vector>
 #include <algorithm>
 #include <math.h>
+#include <fstream>
 
 using namespace std;
+
+//ofstream myfile("/home/mostafa/Qt/Projects/SecurityProject/testright.txt");
 
 unsigned GetNumberOfDigits (long long i)
 {
@@ -795,7 +798,7 @@ vector<long long> mul(vector<long long> fir,vector<long long>sec)
             res[k+l]+= tempo1;
             tempo1 = tempo - tempo1;
             carry= (tempo1)/1000000000;
-            if(k==0 || i==fir.size()-2)
+            if(/*k==0 || i==fir.size()-2*/true)
             {
                 if(res[k+l]> 999999999)
                 {
@@ -910,6 +913,7 @@ long long TstFn(vector<long long>las,vector<long long>sec,vector<long long>m1)
                                 TstMore(tmp2,res,m1,tmp,sec,las,50);
                                 TstMore(tmp2,res,m1,tmp,sec,las,10);
                                 TstMore(tmp2,res,m1,tmp,sec,las,5);
+                                TstMore(tmp2,res,m1,tmp,sec,las,2);
                                 return res;
                             }
                         }
@@ -924,6 +928,55 @@ long long TstFn(vector<long long>las,vector<long long>sec,vector<long long>m1)
         return res;
     }
 }
+
+vector<long long> remBig(vector<long long>fir,vector<long long>sec)
+{
+    vector<long long>res,tmp;
+    /*tmp = sub(fir,sec);
+    if(isGreaterBig(sec,tmp))
+        return tmp;
+    else if(fir.size()==2 && sec.size()==2)
+    {
+        res.resize(2);
+        res[0]=fir[0]/sec[0];
+        tmp = sub(fir,mul(res,sec));
+        return tmp;
+    }*/
+    res.resize(2);
+    bool flag1;
+    while(isGreaterBig(fir,sec))
+    {
+        if(fir[fir.size()-2] > sec [sec.size()-2])
+        {
+            res[0] = fir[fir.size()-2] / sec[sec.size()-2];
+        }
+        else
+        {
+            long long tst = (fir[fir.size()-2]*1000000000)+fir[fir.size()-3];
+            res[0] = tst / sec[sec.size()-2];
+        }
+        tmp = mul(sec,res);
+        flag1 = true;
+        while(isGreaterBig(tmp,fir))
+        {
+            if(flag1)
+            {
+                res[0]=TstFn(fir,sec,res);
+                tmp = mul(sec,res);
+                flag1= 0;
+            }
+            else
+            {
+                res[0]--;
+                tmp = sub(tmp,sec);
+            }
+        }
+        fir = sub(fir,tmp);
+    }
+
+    return fir;
+}
+
 vector<long long> div3(vector<long long>fir,vector<long long>sec,int mode = 0)
 {
     vector<long long>res,m1,tmp,las;
@@ -1331,7 +1384,7 @@ vector<long long>divM(vector<long long>fir,vector<long long>sec,int mode=0)
 //    return res;
 //}
 
-vector<long long> rem(vector<long long>fir, vector<long long> mod)
+vector<long long> rem2(vector<long long>fir, vector<long long> mod)
 {
     if(isGreaterBig(mod,fir))
     {
@@ -1343,9 +1396,12 @@ vector<long long> rem(vector<long long>fir, vector<long long> mod)
         r.resize(0);
         return r;
     }
-    vector<long long> remainder,tmpo1,tmp;
+    vector<long long> remainder,tmpo1,tmp,res,tmp1;
+    long long tst=0;
+    bool flag1;
     remainder.resize(1);
     tmpo1.resize(2);
+    res.resize(2);
     for (int i = fir.size()-2; i >= 0; i--)
     {
         remainder.insert(remainder.begin(),0);
@@ -1354,32 +1410,131 @@ vector<long long> rem(vector<long long>fir, vector<long long> mod)
         if(isGreaterBig(tmp,mod)||IsEqual(tmp,mod))
         {
             remainder = divM(tmp, mod,1);
+
+//            while(isGreaterBig(tmp,mod))
+//            {
+//                res[0]=999999999;
+//                tmp1 = mul(mod,res);
+//                flag1 = true;
+//                while(isGreaterBig(tmp1,tmp))
+//                {
+//                    if(flag1)
+//                    {
+//                        res[0]=TstFn(tmp,mod,res);
+//                        tmp1 = mul(mod,res);
+//                        flag1= 0;
+//                    }
+//                    else
+//                    {
+//                        res[0]--;
+//                        tmp1 = sub(tmp1,mod);
+//                    }
+//                }
+//                tmp = sub(tmp,tmp1);
+//            }
         }
         else remainder = tmp;
     }
     return remainder;
 }
+vector<long long> rem1(vector<long long>fir, vector<long long> mod)
+{
+    if(isGreaterBig(mod,fir))
+    {
+        return fir;
+    }
+    else if(IsEqual(fir,mod))
+    {
+        vector<long long>r;
+        r.resize(0);
+        return r;
+    }
+    string P = ConvToString(fir);
+    vector<long long> remainder,tmpo1,tmp,ten;
+    remainder.resize(1);
+    ten.resize(2);
+    ten[0]=10;
+    tmpo1.resize(2);
+    for (int i = 0; P[i] != '\0'; ++i)
+    {
+        remainder = mul(remainder,ten);
+        tmpo1[0] = P[i]-'0';
+        tmp = sum(remainder,tmpo1);
+        while(isGreaterBig(tmp,mod)||IsEqual(tmp,mod))
+        {
+            tmp=sub(tmp,mod);
+        }
+        remainder = tmp;
+    }
+    return remainder;
+}
+
+vector<long long> rem(vector<long long>fir, vector<long long> mod)
+{
+    if(isGreaterBig(mod,fir))
+    {
+        return fir;
+    }
+    else if(IsEqual(fir,mod))
+    {
+        vector<long long>r;
+        r.resize(2);
+        return r;
+    }
+    string P = ConvToString(fir),R="";
+    vector<long long>remainder,use,ten;
+    remainder.resize(2);
+    use.resize(2);
+    ten.resize(2);
+    ten[0]=10;
+    for (int i = 0; P[i] != '\0'; ++i)
+    {
+        remainder = mul(remainder,ten);
+        use[0] = P[i]-'0';
+        remainder = sum(remainder,use);
+        while(isGreaterBig(remainder,mod) || IsEqual(remainder,mod))
+            remainder = sub(remainder,mod);
+    }
+    return remainder;
+}
+
 void powe(vector<long long>fir,vector<long long>sec,vector<long long> mod, vector<long long>&res)
 {
     if(sec[0]==2)
     {
         res = mul(fir,fir);
         res = rem(res,mod);
-        return ;
+        return;
     }
     if(sec[0]%2 != 0)
     {
         sec[0]--;
         powe(fir,sec,mod,res);
-        res = rem(mul(res,fir),mod);
+        res = mul(res,fir);
+//        if(file == 1)
+//        {
+//            myfile << "res: " << ConvToString(res) << endl;
+//            myfile << "mod: " << ConvToString(mod) << endl;
+//        }
+        res = rem(res,mod);
+//        if(file == 1)
+//        myfile << ConvToString(res) << endl;
     }
     else
     {
         div2(sec,sec);
         powe(fir,sec,mod,res);
-        res = rem(mul(res,res),mod);
+        res = mul(res,res);
+//        if(file == 1)
+//        {
+//            myfile << "res: " << ConvToString(res) << endl;
+//            myfile << "mod: " << ConvToString(mod) << endl;
+//        }
+        res = rem(res,mod);
+//        if(file == 1)
+//        myfile << ConvToString(res) << endl;
     }
-    return ;//res;
+    return;
 }
 
 bool IsEqualZero(vector<long long>n)
@@ -1490,12 +1645,11 @@ int main()
 {
     string P,Q,E,M;
     //cin >> P >> Q >> E;
-
-    bool flag = false;
+    bool flag = false,flag1=false;
     P ="P=12369571528747655798110188786567180759626910465726920556567298659370399748072366507234899432827475865189642714067836207300153035059472237275816384410077871";
     Q ="Q=2065420353441994803054315079370635087865508423962173447811880044936318158815802774220405304957787464676771309034463560633713497474362222775683960029689473";
     E ="E=65537";
-    M ="M=88";
+    M ="M=1976620216402300889624482718775150";
     if (P[0] == 'P')
         P = P.substr(2,P.size()-1);
     if (Q[0] == 'Q')
@@ -1504,64 +1658,36 @@ int main()
         E = E.substr(2,E.size()-1);
     if (M[0] == 'M')
         M = M.substr(2,M.size()-1);
-    vector<long long>q,p,e,m,m1;
-    vector<long long> r ,one ,n ,c;
+    vector<long long>q,p,e,m,n,d,PhiN,one,c;
     p = ConvToArray(P);
     q = ConvToArray(Q);
     e = ConvToArray(E);
     m = ConvToArray(M);
-        m1.resize(2);
-        m1[0]=2;
-    //flag = isPrime(q);
-//    BigNumber * p1 = new BigNumber(P);
-//    BigNumber * q1= new BigNumber(Q);
-//    BigNumber * e1=new BigNumber(E);
-//    BigNumber *r1= new BigNumber();
-//    flag = q1->isPrime();
 //    for(int i=0;i<1000;i++)
 //    {
-//        r=mul(p,q);
-//        one = r;
-//        r[0]++;
-//        //r = divM(r,q,1);
-//        r=rem(r,one);
-////        *r1 = p1->mul(*q1);
-////        r1->num[0]--;
-////        *r1 = r1->rem(*q1);
+////        r=mul(p,q);
+//        d = rem2(p,q);
 //    }
-    //        *r1 = p1->mul(*q1);
-    //        *r1 = r1->divM(*e1,1);
-//    //for(int i=0;i<1000;i++)
-//        r = divM(p,q);
+    flag = isPrime(q);
+    flag1 = isPrime(q);
+    if(flag) cout << "yes\n";
+    if(flag1) cout << "yes\n";
     one.resize(2);
     one[0]=1;
-//    m.resize(2);
-//    m[0]=88;
     n = mul(p,q);
-    //cout << ConvToString(n)<<endl;
-    r = mul(sub(p,one),sub(q,one));
-    r = ExtEc(e,r);
-
+    PhiN = mul(sub(p,one),sub(q,one));
+    d = ExtEc(e,PhiN);
     powe(m,e,n,c);
-    string x = ConvToString(c);
-    cout << x<<endl;
     m.clear();
-    powe(c,r,n,m);
+    string x = ConvToString(c);
+    cout << x << endl;
+    cout << ConvToString(d) << endl;
+    cout << ConvToString(n) << endl;
+    powe(c,d,n,m);
     cout << ConvToString(m) << endl;
-//    flag = p->isPrime();
-//    for(int i=0;i<1000;i++)
-//        *r = p->divM(*q);
-
-    if(flag) cout << "yes";
-//    for(int i = l-2 ; i >= 0 ; i--)
-//    {
-//        if(i!=l-2)
-//        {
-//            int count = 9-GetNumberOfDigits(r[i]);
-//            for(int k = 0; k < count ; k++) cout << "0";
-//        }
-//        cout << r[i];
-//    }
-//    cout <<"\n";
+   //    BigNumber * p1 = new BigNumber(P);
+   //    BigNumber * q1= new BigNumber(Q);
+   //    BigNumber * e1=new BigNumber(E);
+   //    BigNumber *r1= new BigNumber();
     return 0;
 }
