@@ -5,7 +5,7 @@
 #include <math.h>
 #include <fstream>
 
-//#include <cstdio>
+#include <cstdio>
 
 using namespace std;
 
@@ -570,8 +570,8 @@ public:
 
 int main()
 {
-//    FILE * f = new FILE() ;
-//    f = freopen("/home/mostafa/Qt/Projects/SecurityProject/i.txt","r",stdin);
+    FILE * f = new FILE() ;
+    f = freopen("/home/mostafa/Qt/Projects/SecurityProject/i.txt","r",stdin);
     string P,Q,E,choice="";
     cin >> P >> Q >> E;
     bool flag = false,flag1=false;
