@@ -4,11 +4,9 @@
 #include <algorithm>
 #include <math.h>
 #include <fstream>
-
 #include <cstdio>
 
 using namespace std;
-
 
 unsigned GetNumberOfDigits (long long i)
 {
@@ -138,7 +136,7 @@ public:
             l = b.num.size();
             num.resize(l);
         }
-        res.num.resize(l);
+        res.num.resize(l+1);
         for(int i = 0 ; i < l ; i++)
         {
             long long r;
@@ -153,7 +151,7 @@ public:
                 res.num[i] +=r;
             }
         }
-        for(int i = l-2 ; i > 0 ; i--)
+        for(int i = l-1 ; i > 0 ; i--)
         {
             if(res.num[i] == 0)
             {
@@ -246,10 +244,10 @@ public:
             {
                 tempo = b.num[i] * num[k];
                 tempo+=carry;
-                tempo1 = tempo %1000000000;
-                res.num[k+l]+= tempo1;
-                tempo1 = tempo - tempo1;
-                carry= (tempo1)/1000000000;
+                //tempo1 = tempo %1000000000;
+                res.num[k+l]+= tempo %1000000000;
+                //tempo1 = tempo - tempo1;
+                carry= tempo/1000000000;
                 if(res.num[k+l]> 999999999)
                 {
                     r5ama = res.num[k+l];
@@ -414,24 +412,24 @@ public:
         }
     }
 
-    BigNumber rem(BigNumber mod)
+    void rem(BigNumber mod, BigNumber & use, BigNumber & ten , BigNumber & remainder)
     {
         if(mod.isGreaterBig(*this))
         {
-            return *this;
+            remainder = *this;
+            return;
         }
         else if(this->IsEqual(mod))
         {
-            BigNumber r;
-            r.num.resize(2);
-            return r;
+            remainder.num.clear();
+            remainder.num.resize(2);
+            return;
         }
         string P = ConvToString(this->num);
-        BigNumber remainder,use,ten;
+        remainder.num.clear();
         remainder.num.resize(2);
+        use.num.clear();
         use.num.resize(2);
-        ten.num.resize(2);
-        ten.num[0]=10;
         for (int i = 0; P[i] != '\0'; ++i)
         {
             remainder = remainder.mul(ten);
@@ -440,28 +438,27 @@ public:
             while(remainder.isGreaterBig(mod) ||remainder.IsEqual(mod))
                 remainder = remainder.sub(mod);
         }
-        return remainder;
     }
 
-    void powe(BigNumber b,BigNumber mod,BigNumber&res)
+    void powe(BigNumber b,BigNumber mod,BigNumber&res,BigNumber & use, BigNumber & ten)
     {
         if(b.num[0]==2)
         {
             res = this->mul(*this);
-            res = res.rem(mod);
+            res.rem(mod,use,ten,res);
             return ;
         }
         if(b.num[0]%2 != 0)
         {
             b.num[0]--;
-            this->powe(b,mod,res);
-            res = res.mul(*this).rem(mod);
+            this->powe(b,mod,res,use,ten);
+            res.mul(*this).rem(mod,use,ten,res);
         }
         else
         {
             b = b.div2();
-            this->powe(b,mod,res);
-            res = res.mul(res).rem(mod);
+            this->powe(b,mod,res,use,ten);
+            res.mul(res).rem(mod,use,ten,res);
         }
         return ;
     }
@@ -491,37 +488,111 @@ public:
     }
     bool isPrime()
     {
-        if(num[0]%2 == 0) return false;
+
         if(num.size()==2)
         {
-            if(num[0]==2 || num[0]==3) return true;
+            if(num[0]==2 || num[0]==3 || num[0]==5 || num[0]==7) return true;
             else if(num[0]==1 || num[0]==4) return false;
         }
-        BigNumber q,res,a,tmp,tmp2;
+        if(num[0]%2 == 0) return false;
+        BigNumber q,res,a,tmp,tmp2,use,ten("10");
         q.num=num;
         q.num[0]--;
         a.num.resize(2);
         tmp2.num.resize(2);
         long long k=0;
+        int tr=0;
         while(q.num[0]%2==0)
         {
             q = q.div2();
             k++;
         }
         a.num[0]=2;
-        a.powe(q,*this,res);
+        if(q.num.size()==2 && q.num[0]==1) res = a;
+        else a.powe(q,*this,res,use,ten);
         if(res.num.size()==2)
         {
-            if(res.num[0]==1) return true;
+            if(res.num[0]==1)
+            {
+                tr++;
+                goto fir;
+            }
         }
         tmp=*this;
         tmp.num[0]--;
-        if(res.IsEqual(tmp)) return true;
+        if(res.IsEqual(tmp))
+        {
+            tr++;
+            goto fir;
+        }
         for(int i = 1 ; i <= k-1;i++)
         {
-            res = res.mul(res).rem(*this);
-            if(res.IsEqual(tmp)) return true;
+            res.mul(res).rem(*this,use,ten,res);
+            if(res.IsEqual(tmp))
+            {
+                tr++;
+                goto fir;
+            }
         }
+        fir:
+//        a.num[0]=3;
+//        if(q.num.size()==2 && q.num[0]==1) res = a;
+//        else a.powe(q,*this,res,use,ten);
+//        if(res.num.size()==2)
+//        {
+//            if(res.num[0]==1)
+//            {
+//                tr++;
+//                goto sec;
+//            }
+//        }
+//        tmp=*this;
+//        tmp.num[0]--;
+//        if(res.IsEqual(tmp))
+//        {
+//            tr++;
+//            goto sec;
+//        }
+//        for(int i = 1 ; i <= k-1;i++)
+//        {
+//            res.mul(res).rem(*this,use,ten,res);
+//            if(res.IsEqual(tmp))
+//            {
+//                tr++;
+//                goto sec;
+//            }
+//        }
+//        sec:
+        //  if a third iteration is needed
+//        a.num[0]=5;
+//        if(q.num.size()==2 && q.num[0]==1) res = a;
+//        else a.powe(q,*this,res,use,ten);
+//        if(res.num.size()==2)
+//        {
+//            if(res.num[0]==1)
+//            {
+//                tr++;
+//                goto th;
+//            }
+//        }
+//        tmp=*this;
+//        tmp.num[0]--;
+//        if(res.IsEqual(tmp))
+//        {
+//            tr++;
+//            goto th;
+//        }
+//        for(int i = 1 ; i <= k-1;i++)
+//        {
+//            res.mul(res).rem(*this,use,ten,res);
+//            if(res.IsEqual(tmp))
+//            {
+//                tr++;
+//                goto th;
+//            }
+//        }
+//        th:
+        if(tr==1) return true;
         return false;
     }
 
@@ -570,8 +641,8 @@ public:
 
 int main()
 {
-    FILE * f = new FILE() ;
-    f = freopen("/home/mostafa/Qt/Projects/SecurityProject/i.txt","r",stdin);
+     FILE * f = new FILE() ;
+     f = freopen("/home/mostafa/Qt/Projects/SecurityProject/i.txt","r",stdin);
     string P,Q,E,choice="";
     cin >> P >> Q >> E;
     bool flag = false,flag1=false;
@@ -590,6 +661,10 @@ int main()
     BigNumber *one1= new BigNumber("1");
     BigNumber *c1= new BigNumber();
     BigNumber *m1= new BigNumber();
+    BigNumber *use = new BigNumber();
+    BigNumber *ten = new BigNumber();
+    ten->num.resize(2);
+    ten->num[0] = 10;
     *n1 = p1->mul(*q1);
     *PhiN1 = p1->sub(*one1).mul(q1->sub(*one1));
     *d1 = e1->ExtEc(*PhiN1);
@@ -626,7 +701,7 @@ int main()
             choice = choice.substr(15,choice.length()-1);
             choice.pop_back();
             m1->SetStr(choice);
-            m1->powe(*e1,*n1,*c1);
+            m1->powe(*e1,*n1,*c1,*use,*ten);
             cout << ConvToString(c1->num) + "\n";
         }
         else if(choice.substr(0,16) =="EncryptPrivate=<")
@@ -634,7 +709,7 @@ int main()
             choice = choice.substr(16,choice.size()-1);
             choice.pop_back();
             m1->SetStr(choice);
-            m1->powe(*d1,*n1,*c1);
+            m1->powe(*d1,*n1,*c1,*use,*ten);
             cout << ConvToString(c1->num) + "\n";
         }
         else if(choice == "Quit") break;
